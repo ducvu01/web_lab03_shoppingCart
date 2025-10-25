@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Shopping Cart</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+        color: #222;
+      }
+      .header {
+        background: #333;
+        color: white;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .cart-icon {
+        position: relative;
+        cursor: pointer;
+      }
+      .cart-count {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        background: red;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 24px auto;
+        padding: 20px;
+      }
+      .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 18px;
+        margin-bottom: 28px;
+      }
+      .product-card {
+        background: white;
+        padding: 16px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .product-image {
+        width: 100%;
+        height: 160px;
+        background: #fafafa;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 72px;
+      }
+      .product-name {
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .product-price {
+        color: #28a745;
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .add-to-cart-btn {
+        margin-top: auto;
+        padding: 10px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        background: #007bff;
+        color: white;
+        font-size: 15px;
+      }
+      .add-to-cart-btn:hover {
+        background: #005bb5;
+      }
+
+      .cart-section {
+        background: white;
+        padding: 18px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+      }
+      #cartSection {
+        display: none;
+        margin-top: 12px;
+      }
+      .cart-item {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #eee;
+      }
+      .cart-item:last-child {
+        border-bottom: none;
+      }
+      .cart-item-emoji {
+        font-size: 32px;
+        width: 60px;
+        text-align: center;
+      }
+      .cart-item-info {
+        flex: 1;
+      }
+      .cart-item-name {
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+      .cart-item-price {
+        color: #555;
+        margin-bottom: 8px;
+      }
+      .quantity-controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .quantity-controls button {
+        width: 34px;
+        height: 34px;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        background: white;
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .remove-btn {
+        border: none;
+        background: transparent;
+        color: #dc3545;
+        cursor: pointer;
+        font-size: 14px;
+        margin-left: 8px;
+      }
+      .item-subtotal {
+        font-weight: 700;
+        min-width: 110px;
+        text-align: right;
+      }
+
+      .cart-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 14px;
+        border-top: 2px solid #eee;
+        margin-top: 12px;
+      }
+      .cart-total {
+        font-size: 20px;
+        font-weight: 800;
+      }
+      .checkout-btn {
+        padding: 10px 16px;
+        border-radius: 8px;
+        background: #28a745;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .empty {
+        text-align: center;
+        color: #666;
+        padding: 18px 0;
+      }
+
+      @media (max-width: 600px) {
+        .products-grid {
+          grid-template-columns: 1fr;
+        }
+        .item-subtotal {
+          min-width: 80px;
+          font-size: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>My Shop</h1>
+      <div class="cart-icon" onclick="toggleCart()">
+        🛒 Cart
+        <span class="cart-count" id="cartCount">0</span>
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>Products</h2>
+      <div class="products-grid" id="productsGrid"></div>
+
+      <div id="cartSection" class="cart-section">
+        <h2>Shopping Cart</h2>
+        <div id="cartItems"></div>
+
+        <div class="cart-footer">
+          <div id="cartSummary" class="cart-summary"></div>
+          <div style="display: flex; gap: 12px; align-items: center">
+            <div class="cart-total">
+              Total: $<span id="cartTotal">0.00</span>
+            </div>
+            <button class="checkout-btn" onclick="checkout()">Checkout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const products = [
+        { id: 1, name: "Laptop", price: 999.99, image: "💻" },
+        { id: 2, name: "Smartphone", price: 699.99, image: "📱" },
+        { id: 3, name: "Headphones", price: 199.99, image: "🎧" },
+        { id: 4, name: "Smartwatch", price: 299.99, image: "⌚" },
+      ];
+
+      let cart = [];
+
+      function addToCart(productId) {
+        const existing = cart.find((item) => item.productId === productId);
+        if (existing) {
+          existing.quantity += 1;
+        } else {
+          cart.push({ productId, quantity: 1 });
+        }
+        renderCart();
+      }
+
+      function removeFromCart(productId) {
+        cart = cart.filter((item) => item.productId !== productId);
+        renderCart();
+      }
+
+      // Update quantity by change +1 orr -1
+      function updateQuantity(productId, change) {
+        const item = cart.find((i) => i.productId === productId);
+        if (!item) return;
+        item.quantity += change;
+        if (item.quantity <= 0) {
+          // remove item if quantity is 0 or less
+          removeFromCart(productId);
+        } else {
+          renderCart();
+        }
+      }
+
+      // Calculate total price (returns number)
+      function calculateTotal() {
+        let total = 0;
+        for (const item of cart) {
+          const product = products.find((p) => p.id === item.productId);
+          if (product) total += product.price * item.quantity;
+        }
+        return total;
+      }
+
+      // Render product list
+      function renderProducts() {
+        const grid = document.getElementById("productsGrid");
+        grid.innerHTML = "";
+        products.forEach((p) => {
+          const card = document.createElement("div");
+          card.className = "product-card";
+          card.innerHTML = `
+                    <div class="product-image">${p.image}</div>
+                    <div class="product-name">${p.name}</div>
+                    <div class="product-price">$${p.price.toFixed(2)}</div>
+                    <button class="add-to-cart-btn" data-id="${
+                      p.id
+                    }">Add to Cart</button>
+                `;
+          // attach event
+          card
+            .querySelector(".add-to-cart-btn")
+            .addEventListener("click", () => addToCart(p.id));
+          grid.appendChild(card);
+        });
+      }
+
+      // Render cart contents
+      function renderCart() {
+        const cartItemsDiv = document.getElementById("cartItems");
+        const cartCountSpan = document.getElementById("cartCount");
+        const cartTotalSpan = document.getElementById("cartTotal");
+        const cartSummary = document.getElementById("cartSummary");
+
+        // update cart count (sum of quantities)
+        const totalCount = cart.reduce((s, it) => s + it.quantity, 0);
+        cartCountSpan.textContent = totalCount;
+        cartCountSpan.style.display = totalCount === 0 ? "none" : "flex";
+
+        // empty cart
+        if (cart.length === 0) {
+          cartItemsDiv.innerHTML =
+            '<div class="empty">Your cart is empty.</div>';
+          cartTotalSpan.textContent = "0.00";
+          cartSummary.textContent = "";
+          return;
+        }
+
+        // build cart items
+        cartItemsDiv.innerHTML = "";
+        cart.forEach((item) => {
+          const product = products.find((p) => p.id === item.productId);
+          if (!product) return;
+          const subtotal = product.price * item.quantity;
+          const itemDiv = document.createElement("div");
+          itemDiv.className = "cart-item";
+          itemDiv.innerHTML = `
+                    <div class="cart-item-emoji">${product.image}</div>
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${product.name}</div>
+                        <div class="cart-item-price">$${product.price.toFixed(
+                          2
+                        )} each</div>
+                        <div class="quantity-controls">
+                            <button class="qty-decrease" title="Decrease">−</button>
+                            <div style="min-width:34px; text-align:center; font-weight:700;">${
+                              item.quantity
+                            }</div>
+                            <button class="qty-increase" title="Increase">+</button>
+                            <button class="remove-btn" title="Remove">Remove</button>
+                        </div>
+                    </div>
+                    <div class="item-subtotal">$${subtotal.toFixed(2)}</div>
+                `;
+          // attach handlers
+          itemDiv
+            .querySelector(".qty-decrease")
+            .addEventListener("click", () =>
+              updateQuantity(item.productId, -1)
+            );
+          itemDiv
+            .querySelector(".qty-increase")
+            .addEventListener("click", () =>
+              updateQuantity(item.productId, +1)
+            );
+          itemDiv
+            .querySelector(".remove-btn")
+            .addEventListener("click", () => removeFromCart(item.productId));
+
+          cartItemsDiv.appendChild(itemDiv);
+        });
+
+        // update totals
+        const total = calculateTotal();
+        cartTotalSpan.textContent = total.toFixed(2);
+
+        // summary: total items & distinct products
+        const distinct = cart.length;
+        const totalCount2 = cart.reduce((s, it) => s + it.quantity, 0);
+        cartSummary.textContent = `${distinct} item${
+          distinct > 1 ? "s" : ""
+        } • ${totalCount2} unit${totalCount2 > 1 ? "s" : ""}`;
+      }
+
+      // Show/hide cart section
+      function toggleCart() {
+        const sec = document.getElementById("cartSection");
+        sec.style.display = sec.style.display === "block" ? "none" : "block";
+        // when showing, ensure cart is rendered
+        if (sec.style.display === "block") renderCart();
+      }
+
+      // Checkout demo (just clears cart)
+      function checkout() {
+        if (cart.length === 0) {
+          alert("Your cart is empty.");
+          return;
+        }
+        const total = calculateTotal().toFixed(2);
+        alert(
+          `Checkout — Total: $${total}\n(This is a demo; the cart will be cleared.)`
+        );
+        cart = [];
+        renderCart();
+        // optionally hide cart
+        document.getElementById("cartSection").style.display = "none";
+      }
+
+      // Initialize
+      renderProducts();
+      renderCart();
+    </script>
+  </body>
+</html>
